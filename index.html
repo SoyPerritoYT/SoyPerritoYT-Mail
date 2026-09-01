@@ -196,6 +196,36 @@
             document.getElementById('mail-app').style.display = 'flex';
             document.getElementById('display-email').innerText = "Conectado:\n" + usuarioActual;
             document.getElementById('login-password').value = '';
+
+            // Solicitar permiso para notificaciones en Chrome al iniciar sesión
+            solicitarPermisoNotificaciones();
+        }
+
+        function solicitarPermisoNotificaciones() {
+            if (!("Notification" in window)) {
+                alert("Este navegador no soporta notificaciones de escritorio.");
+                return;
+            }
+
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification("🐶 SoyPerrito Mail", {
+                            body: "¡Notificaciones activadas correctamente para " + usuarioActual + "!"
+                        });
+                    }
+                });
+            }
+        }
+
+        // Función para disparar una notificación flotante en Chrome de un nuevo correo
+        function mostrarNotificacionCorreo(remitente, asunto) {
+            if (Notification.permission === "granted") {
+                new Notification("📬 Nuevo correo de: " + remitente, {
+                    body: "Asunto: " + asunto,
+                    icon: "https://cdn-icons-png.flaticon.com/512/281/281769.png"
+                });
+            }
         }
 
         function cambiarCuenta() {
@@ -224,6 +254,10 @@
             emailjs.send("service_le5ewmo", "template_kwflftk", parametros)
                 .then(function(response) {
                     alert("¡Correo enviado con éxito desde " + usuarioActual + "!");
+                    
+                    // Simular notificación de prueba propia para ver cómo salta en Chrome
+                    mostrarNotificacionCorreo(usuarioActual, asunto);
+
                     document.getElementById('to-email').value = '';
                     document.getElementById('email-subject').value = '';
                     document.getElementById('email-body').value = '';
