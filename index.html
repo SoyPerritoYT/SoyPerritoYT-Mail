@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoyPerrito Mail</title>
-    <!-- Librería de la API de EmailJS -->
+    <!-- Librería de la API de EmailJS para envíos -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
@@ -62,7 +62,7 @@
             <h2>🐶 SoyPerrito Mail</h2>
             <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Inicia sesión con una cuenta existente</p>
             
-            <select id="select-cuenta-existente" onchange="seleccionarCuentaDropdown()">
+            <select id="select-cuenta-existente">
                 <option value="">-- Selecciona una cuenta --</option>
             </select>
             
@@ -115,7 +115,6 @@
     <script>
         let usuarioActual = "";
 
-        // Cargar cuentas guardadas en el navegador al abrir la página
         function obtenerCuentas() {
             let cuentas = localStorage.getItem('soyperrito_cuentas');
             return cuentas ? JSON.parse(cuentas) : {};
@@ -166,7 +165,6 @@
                 return;
             }
 
-            // Guardar cuenta nueva
             cuentas[correo] = pass;
             localStorage.setItem('soyperrito_cuentas', JSON.stringify(cuentas));
 
@@ -174,10 +172,6 @@
             document.getElementById('register-username').value = '';
             document.getElementById('register-password').value = '';
             mostrarLogin();
-        }
-
-        function seleccionarCuentaDropdown() {
-            // Opcional si quieres rellenar algo automático al seleccionar
         }
 
         function iniciarSesion() {
@@ -239,11 +233,10 @@
                 });
         }
 
-        // Inicializar al cargar la página
         window.onload = function() {
             actualizarDropdownCuentas();
         };
     </script>
 
 </body>
-                </html>
+    </html>
