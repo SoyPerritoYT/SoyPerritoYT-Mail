@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoyPerrito Mail</title>
-    <!-- Incluimos la librería de EmailJS para conectar con la API -->
+    <!-- Librería de la API de EmailJS -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            // AQUÍ DEBES PONER TU PUBLIC KEY DE EMAILJS (cuando te registres gratis)
-            emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+            emailjs.init("_ThLGgRNTjFwyjknw");
         })();
     </script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; height: 100vh; background-color: #ffffff; color: #333; }
         
-        /* Pantalla de Registro / Login */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; display: flex; justify-content: center; align-items: center; z-index: 1000;
@@ -26,11 +24,12 @@
             border: 1px solid #e1e4e8;
         }
         .auth-card h2 { margin-bottom: 20px; color: #1a73e8; }
-        .auth-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-        .auth-card button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: 500; }
+        .auth-card input, .auth-card select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
+        .auth-card button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: 500; margin-bottom: 10px; }
         .auth-card button:hover { background: #1557b0; }
+        .auth-card .btn-secondary { background: #5f6368; }
+        .auth-card .btn-secondary:hover { background: #444746; }
 
-        /* Interfaz principal del correo (Blanca y limpia) */
         aside { width: 260px; background: #fdfdfd; border-right: 1px solid #e1e4e8; display: flex; flex-direction: column; padding: 20px; }
         aside h2 { margin-bottom: 20px; font-size: 1.3rem; color: #1a73e8; }
         aside ul { list-style: none; }
@@ -50,23 +49,39 @@
         .btn { background: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 6px; cursor: pointer; font-size: 1rem; align-self: flex-start; font-weight: 500; }
         .btn:hover { background: #1557b0; }
 
-        .user-info { margin-top: auto; font-size: 0.85rem; color: #5f6368; border-top: 1px solid #e1e4e8; padding-top: 15px; }
+        .user-info { margin-top: auto; font-size: 0.85rem; color: #5f6368; border-top: 1px solid #e1e4e8; padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .user-info button { padding: 6px 10px; background: #f1f3f4; border: 1px solid #dadce0; border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: #333; }
+        .user-info button:hover { background: #e8eaed; }
     </style>
 </head>
 <body>
 
-    <!-- Pantalla de Registro -->
+    <!-- Pantalla de Autenticación / Cuentas -->
     <div id="auth-screen">
-        <div class="auth-card">
+        <div class="auth-card" id="card-login">
             <h2>🐶 SoyPerrito Mail</h2>
-            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Crea tu correo y contraseña</p>
-            <input type="text" id="username-input" placeholder="Nombre de usuario (ej: pablo)">
-            <input type="password" id="password-input" placeholder="Contraseña">
-            <button onclick="crearCuenta()">Crear cuenta</button>
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Inicia sesión con una cuenta existente</p>
+            
+            <select id="select-cuenta-existente" onchange="seleccionarCuentaDropdown()">
+                <option value="">-- Selecciona una cuenta --</option>
+            </select>
+            
+            <input type="password" id="login-password" placeholder="Contraseña">
+            <button onclick="iniciarSesion()">Iniciar Sesión</button>
+            <button class="btn-secondary" onclick="mostrarRegistro()">Crear nueva cuenta</button>
+        </div>
+
+        <div class="auth-card" id="card-register" style="display: none;">
+            <h2>🐶 Crear Cuenta</h2>
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Registra un nuevo usuario @soyperrito.com</p>
+            <input type="text" id="register-username" placeholder="Nombre de usuario (ej: pablo)">
+            <input type="password" id="register-password" placeholder="Contraseña">
+            <button onclick="crearCuenta()">Registrar cuenta</button>
+            <button class="btn-secondary" onclick="mostrarLogin()">Volver a Iniciar Sesión</button>
         </div>
     </div>
 
-    <!-- Interfaz de Correo -->
+    <!-- Aplicación de Correo -->
     <div id="mail-app" style="display: none; width: 100%; height: 100vh; display: flex;">
         <aside>
             <h2>SoyPerrito</h2>
@@ -75,8 +90,9 @@
                 <li>📤 Enviados</li>
                 <li>🗑️ Papelera</li>
             </ul>
-            <div class="user-info" id="display-email">
-                usuario@soyperrito.com
+            <div class="user-info">
+                <span id="display-email">usuario@soyperrito.com</span>
+                <button onclick="cambiarCuenta()">🔄 Cambiar / Añadir cuenta</button>
             </div>
         </aside>
 
@@ -89,7 +105,7 @@
 
         <div class="email-viewer">
             <h3>Redactar nuevo mensaje</h3>
-            <input type="email" id="to-email" placeholder="Para: (ejemplo@gmail.com)">
+            <input type="email" id="to-email" placeholder="Para: (ejemplo@gmail.com u otro correo)">
             <input type="text" id="email-subject" placeholder="Asunto">
             <textarea id="email-body" placeholder="Escribe tu mensaje aquí..."></textarea>
             <button class="btn" onclick="enviarCorreoAPI()">Enviar correo</button>
@@ -99,24 +115,99 @@
     <script>
         let usuarioActual = "";
 
-        function crearCuenta() {
-            const inputUsuario = document.getElementById('username-input').value.trim().toLowerCase();
-            const inputPassword = document.getElementById('password-input').value;
+        // Cargar cuentas guardadas en el navegador al abrir la página
+        function obtenerCuentas() {
+            let cuentas = localStorage.getItem('soyperrito_cuentas');
+            return cuentas ? JSON.parse(cuentas) : {};
+        }
 
-            if(!inputUsuario) {
-                alert("Por favor, introduce un nombre de usuario.");
+        function actualizarDropdownCuentas() {
+            const cuentas = obtenerCuentas();
+            const select = document.getElementById('select-cuenta-existente');
+            select.innerHTML = '<option value="">-- Selecciona una cuenta --</option>';
+            
+            for (let correo in cuentas) {
+                let opt = document.createElement('option');
+                opt.value = correo;
+                opt.textContent = correo;
+                select.appendChild(opt);
+            }
+        }
+
+        function mostrarRegistro() {
+            document.getElementById('card-login').style.display = 'none';
+            document.getElementById('card-register').style.display = 'block';
+        }
+
+        function mostrarLogin() {
+            document.getElementById('card-register').style.display = 'none';
+            document.getElementById('card-login').style.display = 'block';
+            actualizarDropdownCuentas();
+        }
+
+        function crearCuenta() {
+            const user = document.getElementById('register-username').value.trim().toLowerCase();
+            const pass = document.getElementById('register-password').value;
+
+            if(!user) {
+                alert("Introduce un nombre de usuario.");
                 return;
             }
-            if(!inputPassword || inputPassword.length < 4) {
-                alert("Por favor, introduce una contraseña de al menos 4 caracteres.");
+            if(!pass || pass.length < 4) {
+                alert("La contraseña debe tener al menos 4 caracteres.");
                 return;
             }
-            
-            usuarioActual = inputUsuario + "@soyperrito.com";
-            
+
+            const correo = user + "@soyperrito.com";
+            let cuentas = obtenerCuentas();
+
+            if(cuentas[correo]) {
+                alert("Esta cuenta ya existe. Inicia sesión.");
+                return;
+            }
+
+            // Guardar cuenta nueva
+            cuentas[correo] = pass;
+            localStorage.setItem('soyperrito_cuentas', JSON.stringify(cuentas));
+
+            alert("¡Cuenta creada con éxito! Ahora puedes iniciar sesión.");
+            document.getElementById('register-username').value = '';
+            document.getElementById('register-password').value = '';
+            mostrarLogin();
+        }
+
+        function seleccionarCuentaDropdown() {
+            // Opcional si quieres rellenar algo automático al seleccionar
+        }
+
+        function iniciarSesion() {
+            const select = document.getElementById('select-cuenta-existente');
+            const correo = select.value;
+            const pass = document.getElementById('login-password').value;
+
+            if(!correo) {
+                alert("Selecciona una cuenta.");
+                return;
+            }
+
+            let cuentas = obtenerCuentas();
+
+            if(cuentas[correo] !== pass) {
+                alert("Contraseña incorrecta.");
+                return;
+            }
+
+            usuarioActual = correo;
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('mail-app').style.display = 'flex';
-            document.getElementById('display-email').innerText = "Conectado como:\n" + usuarioActual;
+            document.getElementById('display-email').innerText = "Conectado:\n" + usuarioActual;
+            document.getElementById('login-password').value = '';
+        }
+
+        function cambiarCuenta() {
+            document.getElementById('mail-app').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+            mostrarLogin();
         }
 
         function enviarCorreoAPI() {
@@ -129,7 +220,6 @@
                 return;
             }
 
-            // Parámetros que se envían a la API de EmailJS
             const parametros = {
                 remitente: usuarioActual,
                 to_email: destinatario,
@@ -137,19 +227,23 @@
                 message: mensaje
             };
 
-            // Llamada real a la API (necesitarás configurar tu Service ID y Template ID en EmailJS)
-            emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", parametros)
+            emailjs.send("service_le5ewmo", "template_kwflftk", parametros)
                 .then(function(response) {
-                    alert("¡Correo enviado con éxito a través de la API!");
+                    alert("¡Correo enviado con éxito desde " + usuarioActual + "!");
                     document.getElementById('to-email').value = '';
                     document.getElementById('email-subject').value = '';
                     document.getElementById('email-body').value = '';
                 }, function(error) {
-                    alert("Error al enviar el correo. Asegúrate de configurar las credenciales de EmailJS.");
-                    console.log("FAILED...", error);
+                    alert("Error al enviar el correo.");
+                    console.log("Error:", error);
                 });
         }
+
+        // Inicializar al cargar la página
+        window.onload = function() {
+            actualizarDropdownCuentas();
+        };
     </script>
 
 </body>
-        </html>
+    </html>
