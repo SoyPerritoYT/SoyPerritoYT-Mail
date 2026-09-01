@@ -4,22 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoyPerrito Mail</title>
+    <!-- Incluimos la librería de EmailJS para conectar con la API -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+        (function() {
+            // AQUÍ DEBES PONER TU PUBLIC KEY DE EMAILJS (cuando te registres gratis)
+            emailjs.init("TU_PUBLIC_KEY_DE_EMAILJS");
+        })();
+    </script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { display: flex; height: 100vh; background-color: #ffffff; color: #333; }
         
-        /* Pantalla de Registro / Login inicial */
+        /* Pantalla de Registro / Login */
         #auth-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; display: flex; justify-content: center; align-items: center; z-index: 1000;
         }
         .auth-card {
-            background: #f8f9fa; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 350px; text-align: center;
+            background: #f8f9fa; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 380px; text-align: center;
             border: 1px solid #e1e4e8;
         }
         .auth-card h2 { margin-bottom: 20px; color: #1a73e8; }
         .auth-card input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 1rem; }
-        .auth-card button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+        .auth-card button { width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; font-weight: 500; }
         .auth-card button:hover { background: #1557b0; }
 
         /* Interfaz principal del correo (Blanca y limpia) */
@@ -47,15 +55,18 @@
 </head>
 <body>
 
+    <!-- Pantalla de Registro -->
     <div id="auth-screen">
         <div class="auth-card">
             <h2>🐶 SoyPerrito Mail</h2>
-            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Crea tu correo personalizado</p>
-            <input type="text" id="username-input" placeholder="Tu nombre o usuario (ej: pablo)">
+            <p style="margin-bottom: 15px; font-size: 0.9rem; color: #666;">Crea tu correo y contraseña</p>
+            <input type="text" id="username-input" placeholder="Nombre de usuario (ej: pablo)">
+            <input type="password" id="password-input" placeholder="Contraseña">
             <button onclick="crearCuenta()">Crear cuenta</button>
         </div>
     </div>
 
+    <!-- Interfaz de Correo -->
     <div id="mail-app" style="display: none; width: 100%; height: 100vh; display: flex;">
         <aside>
             <h2>SoyPerrito</h2>
@@ -78,10 +89,10 @@
 
         <div class="email-viewer">
             <h3>Redactar nuevo mensaje</h3>
-            <input type="email" id="to-email" placeholder="Para: (ejemplo@gmail.com u otro correo)">
+            <input type="email" id="to-email" placeholder="Para: (ejemplo@gmail.com)">
             <input type="text" id="email-subject" placeholder="Asunto">
             <textarea id="email-body" placeholder="Escribe tu mensaje aquí..."></textarea>
-            <button class="btn" onclick="enviarCorreo()">Enviar correo</button>
+            <button class="btn" onclick="enviarCorreoAPI()">Enviar correo</button>
         </div>
     </div>
 
@@ -89,40 +100,56 @@
         let usuarioActual = "";
 
         function crearCuenta() {
-            const input = document.getElementById('username-input').value.trim().toLowerCase();
-            if(!input) {
-                alert("Por favor, introduce un nombre válido.");
+            const inputUsuario = document.getElementById('username-input').value.trim().toLowerCase();
+            const inputPassword = document.getElementById('password-input').value;
+
+            if(!inputUsuario) {
+                alert("Por favor, introduce un nombre de usuario.");
+                return;
+            }
+            if(!inputPassword || inputPassword.length < 4) {
+                alert("Por favor, introduce una contraseña de al menos 4 caracteres.");
                 return;
             }
             
-            // Generar el correo con el dominio solicitado
-            usuarioActual = input + "@soyperrito.com";
+            usuarioActual = inputUsuario + "@soyperrito.com";
             
-            // Ocultar pantalla de registro y mostrar la app
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('mail-app').style.display = 'flex';
             document.getElementById('display-email').innerText = "Conectado como:\n" + usuarioActual;
         }
 
-        function enviarCorreo() {
+        function enviarCorreoAPI() {
             const destinatario = document.getElementById('to-email').value;
             const asunto = document.getElementById('email-subject').value;
             const mensaje = document.getElementById('email-body').value;
 
             if(!destinatario || !asunto || !mensaje) {
-                alert("Por favor, rellena todos los campos para enviar el correo.");
+                alert("Por favor, rellena todos los campos.");
                 return;
             }
 
-            // Simulación de envío exitoso hacia cualquier otro correo externo
-            alert(`¡Correo enviado con éxito desde ${usuarioActual} hacia ${destinatario}!\n\nAsunto: ${asunto}`);
-            
-            // Limpiar campos
-            document.getElementById('to-email').value = '';
-            document.getElementById('email-subject').value = '';
-            document.getElementById('email-body').value = '';
+            // Parámetros que se envían a la API de EmailJS
+            const parametros = {
+                remitente: usuarioActual,
+                to_email: destinatario,
+                subject: asunto,
+                message: mensaje
+            };
+
+            // Llamada real a la API (necesitarás configurar tu Service ID y Template ID en EmailJS)
+            emailjs.send("TU_SERVICE_ID", "TU_TEMPLATE_ID", parametros)
+                .then(function(response) {
+                    alert("¡Correo enviado con éxito a través de la API!");
+                    document.getElementById('to-email').value = '';
+                    document.getElementById('email-subject').value = '';
+                    document.getElementById('email-body').value = '';
+                }, function(error) {
+                    alert("Error al enviar el correo. Asegúrate de configurar las credenciales de EmailJS.");
+                    console.log("FAILED...", error);
+                });
         }
     </script>
 
 </body>
-  </html>
+        </html>
